@@ -33,7 +33,7 @@ qpn_re 		= "(QPN)|(COMPONENT.?PART)"
 mfgpn_re 	= "(MFG.?PN)"										# To match MFGPN or MFG PN (will ignore case)
 mfg_re 		= "(MFG)|(MANUFACTURER)"			
 des_re 		= "(DES)|(DESCRIPTION)|(Part.?Description)"
-ref_re		= "(REF)|(REF.DES)|(REFERENCE)|(NOTES)"				# IFS BOMs often put this information in the NOTES column
+ref_re		= "(REF)|(REF.DES)|(REFERENCE)"				# IFS BOMs often put this information in the NOTES column
 qty_re		= "(QTY)|(QUANTITY)|(Qty.{1,20})"
 uom_re		= "(UOM)|(UNIT OF MEASURE)"
 cr1_re		= "(CR1)"
@@ -117,23 +117,43 @@ def pause():
 	user_input=input("Press any key to exit...")
 	sys.exit(0)
 
-# -------------------------------------- #
+# ------------------------------------- #
 # Setup Logging
 # -------------------------------------- #
 logging.basicConfig(
-    filename = 'compare_bom.log',
-    level = logging.DEBUG,
-    format =' %(asctime)s -  %(levelname)s - %(message)s',
+	filename = 'compare_bom.log',
+	level = logging.DEBUG,
+	format =' %(asctime)s -  %(levelname)s - %(message)s',
 	filemode = 'w'
 )
-	   
+
+
 #****************************************************************************** 
 #******************************  ---MAIN---  **********************************
 #******************************************************************************   
 if __name__ == '__main__':
 
+	# ----------------------------------------------------------------------- #
+	# Iterate through files and delete
+	# existing comparison BOMs and log files if they exist
+	# ----------------------------------------------------------------------- #
+
 	path = os.getcwd()
-	# Find path/dirs/files
+	for (path, dirs, files) in os.walk(path):
+		path
+		dirs
+		files
+	
+	for i in range(len(files)):
+		if(files[i].find("Comparison") != -1):
+			logging.info("Deleting existing comparison BOM.")
+			os.remove(files[i])
+
+	# ----------------------------------------------------------------------- #
+	# Some file may have been removed, so refresh 
+	# directory information.  
+	# ----------------------------------------------------------------------- #
+	path = os.getcwd()
 	for (path, dirs, files) in os.walk(path):
 		path
 		dirs
@@ -430,8 +450,6 @@ if __name__ == '__main__':
 	NewBook = Workbook()
 	NewSheet = NewBook.active
 	NewSheet.title = "Comparison Data"
-
-	current_sheet = wb[ws[sh]]
 
 	# ----------------------------------------------------------------------- #
 	# Format column widths

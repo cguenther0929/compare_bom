@@ -14,3 +14,5 @@ Subtle discrepancies will be accepted.  For example, _Des_, _DES_, _Description_
 
 # Revisions
 v1.0 -- Initial release.   
+
+v1.1 --  When searching for the "reference" fields, the "notes" field is no longer included.  Therefore, "notes" is no longer a substitute for "reference".  This means that BOMs shall have a "reference" field.  The reason for this change is that boms containing both "notes" and "reference" fields would produce errors.   
