@@ -160,7 +160,11 @@ if __name__ == '__main__':
 		files
 
 	print ("Files found in directory: ", str(len(files)))
+	logging.info("Files found in directory: ", str(len(files)))
 	print ("File names: ", files)
+	for i in range(len(files)):
+		logging.info("File ", str(i), ") ", files[i])
+
 
 	# ----------------------------------------------------------------------- #
 	# Iterate through files
@@ -172,7 +176,14 @@ if __name__ == '__main__':
 		# ----------------------------------------------------------------------- #
 		if(files[i].upper().endswith(".XLSX")):
 			
+			print ("\n===============================================")
+			print ("===============================================")
 			print ("Opening file: ", files[i])
+
+			logging.info ("===============================================")
+			logging.info ("===============================================")
+			logging.info ("Opening file: " + files[i])
+			
 			wb = load_workbook(filename = files[i])     # Open the workbook that we are going to parse though 
 			ws = wb.sheetnames             				# Grab the names of the worksheets -- I believe this line is critical.
 			
@@ -208,6 +219,12 @@ if __name__ == '__main__':
 			print ("===============================================")
 			print ("File opened: ", str(files[i]))
 			
+			logging.info ("===============================================")
+			logging.info ("===============================================")
+			logging.info("File opened: " + str(files[i]))
+
+
+			
 			if(bom_is_ifs):
 				print("This has been detected as the IFS BOM.")
 				logging.info("This has been detected as the IFS BOM.")
@@ -218,6 +235,10 @@ if __name__ == '__main__':
 			print ("The number of worksheets is: ", str(num_sheets))
 			print ("Worksheet names: ", ws)
 			print ("===============================================")
+			
+			logging.info ("The number of worksheets is: " + str(num_sheets))
+			for i in range (len(ws)):
+				logging.info ("Worksheet ",str(i), ") ", ws)
 
 			# ----------------------------------------------------------------------- #
 			# Iterate through all sheets
@@ -227,7 +248,10 @@ if __name__ == '__main__':
 				
 				current_sheet = wb[ws[sh]]
 				
+				print ("\n\n===============================================")
 				print("Now operating on worksheet: ", ws[sh])
+				logging.info ("===============================================")
+				logging.info ("Now operating on worksheet: " + ws[sh])
 				
 				num_rows = current_sheet.max_row     		
 				num_cols = current_sheet.max_column 		
@@ -251,38 +275,40 @@ if __name__ == '__main__':
 						temptext = temptext.rstrip("\'")     		
 						temptext = temptext.replace(" ","")			# Remove any and all white spaces 
 						logging.info("Text extracted from cell: " + temptext)
-						# print ("****DEBUG Text Extracted: ", temptext)
-						# print ("****DEBUG Current column number: ", str(c))
-
-
 						
 						if(re.fullmatch(qpn_re,temptext,re.IGNORECASE)):
 							QPN_col = c
 							search_header.remove("QPN")
 							logging.info("Found header: " + temptext)
 							logging.info("Still Looking For: " + str(search_header))
-							# print("**** DEBUG found QPN")
 						
 						elif(re.fullmatch(des_re,temptext,re.IGNORECASE)):		#Look for Description
 							DES_col = c
 							search_header.remove("DES")
 							logging.info("Found header: " + temptext)
 							logging.info("Still Looking For: " + str(search_header))
-							# print("**** DEBUG found DES")
 						
 						elif(re.fullmatch(ref_re,temptext,re.IGNORECASE)):		#Look for Description
 							REF_col = c
 							search_header.remove("REF")
 							logging.info("Found header: " + temptext)
 							logging.info("Still Looking For: " + str(search_header))
-							# print("**** DEBUG found REF")
 						
 						elif(re.fullmatch(qty_re,temptext,re.IGNORECASE)):		#Look for Quantity field.  
 							QTY_col = c
 							search_header.remove("QTY")
 							logging.info("Found header: " + temptext)
 							logging.info("Still Looking For: " + str(search_header))
-							# print("**** DEBUG found QTY")
+
+						# Point where we found every header field except the reference
+						if((len(search_header) == 1) and ("REF" in search_header) and (c == (num_cols))):
+							REF_col = 30
+							search_header.remove("REF")
+							logging.info("There is no reference field in this BOM. All other header fields found.")
+
+					######
+					# END FOR Iterating Over Columns
+					######
 
 					if( (len(search_header) == 0) ):		# Found all header fields
 						sheet_valid = True
