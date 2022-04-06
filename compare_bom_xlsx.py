@@ -58,18 +58,20 @@ BOM_HEADER 	= ["QPN","QTY","DES","REF"]		# The IFS BOM dictates this
 # -------------------------------------- #
 # Dictionaries
 # -------------------------------------- #
-dict_eng_bom	= {}
-dict_ifs_bom	= {}
+dict_type1_bom	= {}
+dict_type2_bom	= {}
 
 
 # -------------------------------------- #
 # Boolean Flags
 # -------------------------------------- #
-bom_is_ifs				= False		# True if IFS BOM / False if ENG BOM
+bom_is_types2				= False		# True if IFS BOM / False if ENG BOM
 flag_header_detecetd 	= False		# Set to true as soon as we detect header data in one of the rows
 sheet_valid		= False		# Flag that tells application if a sheet contains valid data or not
 
 
+type1_bom_description	= ""		# A short string to identify BOM of type 1 (i.e. "A01" or "ENG")
+type2_bom_description	= ""		# A short string to identify BOM of type 1 (i.e. "A02" or "IFS")
 data_start 				= 0			# This is the row where the data starts
 search_header 	= []		# Set equal to BOM_HEADER and pop elements until we find all the colums we're looking for
 header 			= []		# This array will define the column locations for the header
@@ -160,10 +162,10 @@ if __name__ == '__main__':
 		files
 
 	print ("Files found in directory: ", str(len(files)))
-	logging.info("Files found in directory: ", str(len(files)))
+	logging.info("Files found in directory: " + str(len(files)))
 	print ("File names: ", files)
 	for i in range(len(files)):
-		logging.info("File ", str(i), ") ", files[i])
+		logging.info("File " + str(i) + ") " + files[i])
 
 
 	# ----------------------------------------------------------------------- #
@@ -196,41 +198,18 @@ if __name__ == '__main__':
 			# ----------------------------------------------------------------------- #
 			# Determine BOM Origin (ENG or IFS)
 			# ----------------------------------------------------------------------- #
-			# TODO need to search file string to determine if ENG or IFS
-			if ((files[i].find("ENG") != -1) or (files[i].find("eng") != -1)):
-				bom_is_ifs = False
-			elif ((files[i].find("IFS") != -1) or (files[i].find("ifs") != -1)):
-				bom_is_ifs = True
+			if(len(type1_bom_description) <= 1):
+				type1_bom_description = input("Enter a short description for this BOM (i.e. \"ENG\"): ").strip()
+				bom_is_types2 = False
+			elif(len(type2_bom_description) <= 1):
+				type2_bom_description = input("Enter a short description for this BOM (i.e. \"IFS\"):" ).strip()
+				bom_is_types2 = True
 			else:
-				logging.info("Asking user to distinguish ENG vs. IFS BOM.")
-				while(True):
-					temp_input = input("Is this the ENG BOM (y/n): ")   
-					if(temp_input == 'y'):
-						bom_is_ifs = False
-						break
-					elif(temp_input == 'n'):
-						bom_is_ifs = True
-						break
-					else:
-						pass
+				bom_is_types2 = False
+				print("**Too many Excel files detected, now exiting.")
+				logging.info("**Too many Excel files detected, now exiting.  ")
+				exit()
 			
-			
-			print ("\n\n===============================================")
-			print ("===============================================")
-			print ("File opened: ", str(files[i]))
-			
-			logging.info ("===============================================")
-			logging.info ("===============================================")
-			logging.info("File opened: " + str(files[i]))
-
-
-			
-			if(bom_is_ifs):
-				print("This has been detected as the IFS BOM.")
-				logging.info("This has been detected as the IFS BOM.")
-			else:
-				print("This has been detected as the ENG BOM.")
-				logging.info("This has been detected as the ENG BOM.")
 
 			print ("The number of worksheets is: ", str(num_sheets))
 			print ("Worksheet names: ", ws)
@@ -390,12 +369,12 @@ if __name__ == '__main__':
 
 		if(sheet_valid):
 			# Construct dictionary 
-			if(bom_is_ifs):
+			if(bom_is_types2):
 				for i in range (0,len(qpn)):				
-					dict_ifs_bom[qpn[i]] = (des[i],ref[i],qty[i])
+					dict_type2_bom[qpn[i]] = (des[i],ref[i],qty[i])
 			else:
 				for i in range (0,len(qpn)):				
-					dict_eng_bom[qpn[i]] = (des[i],ref[i],qty[i])
+					dict_type1_bom[qpn[i]] = (des[i],ref[i],qty[i])
 
 		# ----------------------------------------------------------------------- #
 		# Lists shall be cleared before moving onto the 
@@ -416,8 +395,8 @@ if __name__ == '__main__':
 
 	
 	# ----------------------------------------------------------------------- #
-	# Iterate through every QPN in the ENG BOM
-	# and compare against IFS
+	# Iterate through every QPN in the Type 1 BOM and 
+	# and compare against Type 2
 	# ----------------------------------------------------------------------- #
 	print("\n\n================================================")
 	print("================================================")
@@ -426,38 +405,36 @@ if __name__ == '__main__':
 	logging.info("================================================")
 	logging.info("All Matches")
 	
-	for key in dict_eng_bom:
-		if(key in dict_ifs_bom):
-			print("QPN: ", key, " -- in ENG and IFS BOM")
+	for key in dict_type1_bom:
+		if(key in dict_type2_bom):
+			print("QPN: ", key, " -- in ",type1_bom_description," and ",type2_bom_description, " BOM.")
 			
-			print("\tENG/IFS DES:\t", dict_eng_bom[key][0]," | ",dict_ifs_bom[key][0])
-			print("\tENG/IFS QTY:\t", dict_eng_bom[key][2]," | ",dict_ifs_bom[key][2])
-			print("\tENG/IFS REF:\t", dict_eng_bom[key][1]," | ",dict_ifs_bom[key][1])
+			print("\tType 1/Type 2 DES:\t", dict_type1_bom[key][0]," | ",dict_type2_bom[key][0])
+			print("\tType 1/Type 2 QTY:\t", dict_type1_bom[key][2]," | ",dict_type2_bom[key][2])
+			print("\tType 1/Type 2 REF:\t", dict_type1_bom[key][1]," | ",dict_type2_bom[key][1])
 		
 	print("\n================================================")
 	print("================================================")
-	print("In Engineering but not in IFS")
+	print("In ",type1_bom_description,", but not in ",type2_bom_description," BOM" )
 	logging.info("================================================")
 	logging.info("================================================")
-	logging.info("In Engineering but not in IFS")
+	logging.info("In " + str(type1_bom_description) + ", but not in " + str(type2_bom_description) + " BOM" )
 		
-	for key in dict_eng_bom:
-		if (key not in dict_ifs_bom):
-			print("QPN ", key, " -- is in ENG but NOT in IFS.")
+	for key in dict_type1_bom:
+		if (key not in dict_type2_bom):
+			print("QPN ", key, " -- in ",type1_bom_description," but not in ",type2_bom_description, " BOM.")
 
 
 	print("\n================================================")
 	print("================================================")
-	print("In IFS, but not in Engineering")
+	print("In ",type2_bom_description," but not in ",type1_bom_description," BOM")
 	logging.info("================================================")
 	logging.info("================================================")
-	logging.info("In IFS, but not in Engineering")
+	logging.info("In " + str(type2_bom_description) + " but not in " + str(type1_bom_description) + " BOM")
 
-	for key in dict_ifs_bom:
-		if(key not in dict_eng_bom):
-			print("QPN: ", key, " -- is in IFS but NOT in ENG.")
-		# else:
-		# 	print("Key -- ", key, " -- is NOT in the ENG BOM.")
+	for key in dict_type2_bom:
+		if(key not in dict_type1_bom):
+			print("QPN: ", key, " -- is in ", type2_bom_description, ", but NOT in ", type1_bom_description)
 			
 	print("\n")
 	
@@ -493,8 +470,11 @@ if __name__ == '__main__':
 	NewSheet.column_dimensions['K'].width = 15
 	
 	
-	comparison_bom_header = ["IFS QPN","ENG QPN","-","IFS DES","ENG DES","-","IFS REF","ENG REF","-","IFS QTY","ENG QTY"]
-	comparison_bom_col_offsets = {"IFS_QPN":1,"ENG_QPN":2,"IFS_DES":4,"ENG_DES":5,"IFS_REF":7,"ENG_REF":8,"IFS_QTY":10,"ENG_QTY":11}
+	comparison_bom_header = [ 	str(type2_bom_description) + " QPN", str(type1_bom_description) + " QPN","-",
+								str(type2_bom_description) + " DES", str(type1_bom_description) + " DES","-",
+								str(type2_bom_description) + " REF", str(type1_bom_description) + " REF","-",
+								str(type2_bom_description) + " QTY", str(type1_bom_description) + " QTY"]
+	comparison_bom_col_offsets = {"T2_QPN":1,"T1_QPN":2,"T2_DES":4,"T1_DES":5,"T2_REF":7,"T1_REF":8,"T2_QTY":10,"T1_QTY":11}
 	current_row_counter = 1
 	# ----------------------------------------------------------------------- #
 	# Write the header values -- first column
@@ -511,23 +491,23 @@ if __name__ == '__main__':
 	logging.info("================================================")
 	logging.info("Writing to BOM the components that match")
 	
-	NewSheet.cell(row=current_row_counter,column=1).value = "These QPNs match between IFS and ENG"
+	NewSheet.cell(row=current_row_counter,column=1).value = ("These QPNs match between " + type2_bom_description + " and " + type1_bom_description)
 	current_row_counter = current_row_counter + 1 
 	
-	for key in dict_eng_bom:
-		if(key in dict_ifs_bom):
+	for key in dict_type1_bom:
+		if(key in dict_type2_bom):
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["IFS_QPN"]).value = key
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["ENG_QPN"]).value = key
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QPN"]).value = key
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QPN"]).value = key
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["IFS_DES"]).value = dict_ifs_bom[key][0]
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["ENG_DES"]).value = dict_eng_bom[key][0]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_DES"]).value = dict_type2_bom[key][0]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_DES"]).value = dict_type1_bom[key][0]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["IFS_REF"]).value = dict_ifs_bom[key][1]
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["ENG_REF"]).value = dict_eng_bom[key][1]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_REF"]).value = dict_type2_bom[key][1]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_REF"]).value = dict_type1_bom[key][1]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["IFS_QTY"]).value = dict_ifs_bom[key][2]
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["ENG_QTY"]).value = dict_eng_bom[key][2]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QTY"]).value = dict_type2_bom[key][2]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QTY"]).value = dict_type1_bom[key][2]
 			
 			current_row_counter = current_row_counter + 1 
 			
@@ -539,20 +519,20 @@ if __name__ == '__main__':
 	# and compare against IFS
 	# ----------------------------------------------------------------------- #
 	logging.info("================================================")
-	logging.info("Writing to BOM the components in ENG BOM but not in IFS")
+	logging.info("Writing to BOM the components in " + str(type1_bom_description) + " BOM but not in " + str(type2_bom_description))
 	
-	NewSheet.cell(row=current_row_counter,column=1).value = "These QPNs are in ENG, but NOT in IFS"
+	NewSheet.cell(row=current_row_counter,column=1).value = ("These QPNs are in " + type1_bom_description + " but NOT in " + type2_bom_description)
 	current_row_counter = current_row_counter + 1 
 	
-	for key in dict_eng_bom:
-		if (key not in dict_ifs_bom):
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["ENG_QPN"]).value = key
+	for key in dict_type1_bom:
+		if (key not in dict_type2_bom):
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QPN"]).value = key
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["ENG_DES"]).value = dict_eng_bom[key][0]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_DES"]).value = dict_type1_bom[key][0]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["ENG_REF"]).value = dict_eng_bom[key][1]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_REF"]).value = dict_type1_bom[key][1]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["ENG_QTY"]).value = dict_eng_bom[key][2]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QTY"]).value = dict_type1_bom[key][2]
 	
 			current_row_counter = current_row_counter + 1 
 	
@@ -564,20 +544,20 @@ if __name__ == '__main__':
 	# and compare against ENG
 	# ----------------------------------------------------------------------- #
 	logging.info("================================================")
-	logging.info("Writing to BOM the components in IFS BOM but not in ENG")
+	logging.info("Writing to BOM the components in " + str(type2_bom_description) + " BOM but not in " + str(type1_bom_description))
 	
-	NewSheet.cell(row=current_row_counter,column=1).value = "These QPNs are in IFS, but NOT in ENG"
+	NewSheet.cell(row=current_row_counter,column=1).value = ("These QPNs are in " + type2_bom_description + " but NOT in " + type1_bom_description)
 	current_row_counter = current_row_counter + 1 
 	
-	for key in dict_ifs_bom:
-		if(key not in dict_eng_bom):
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["IFS_QPN"]).value = key
+	for key in dict_type2_bom:
+		if(key not in dict_type1_bom):
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QPN"]).value = key
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["IFS_DES"]).value = dict_ifs_bom[key][0]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_DES"]).value = dict_type2_bom[key][0]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["IFS_REF"]).value = dict_ifs_bom[key][1]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_REF"]).value = dict_type2_bom[key][1]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["IFS_QTY"]).value = dict_ifs_bom[key][2]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QTY"]).value = dict_type2_bom[key][2]
 	
 			current_row_counter = current_row_counter + 1 
 	

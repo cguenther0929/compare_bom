@@ -18,3 +18,5 @@ v1.0 -- Initial release.
 v1.1 --  When searching for the "reference" fields, the "notes" field is no longer included.  Therefore, "notes" is no longer a substitute for "reference".  This means that BOMs shall have a "reference" field.  The reason for this change is that boms containing both "notes" and "reference" fields would produce errors.   
 
 v1.2 -- Made logging more verbose so it is easier to identify BOM formatting issues.  It is no longer required that there be a REF field in the BOM -- which is good for BOMs that include cable drawings, which do not require a reference field.  
+
+V1.3 -- BOM descriptions are no longer fixed at ENG or IFS, but rather, the user can enter a short description based on the filename.  For example, he/she may wish to enter A02 and A03.  
