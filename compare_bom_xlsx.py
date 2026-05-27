@@ -476,26 +476,29 @@ if __name__ == '__main__':
 	# ----------------------------------------------------------------------- #
 	NewSheet.column_dimensions['A'].width = 25			# MFGPN (1)
 	NewSheet.column_dimensions['B'].width = 25			
-	NewSheet.column_dimensions['C'].width = 5			# DASH
-	NewSheet.column_dimensions['C'].width = 25			# QPN
-	NewSheet.column_dimensions['D'].width = 25
-	NewSheet.column_dimensions['E'].width = 5			# DASH   (5)
-	NewSheet.column_dimensions['F'].width = 50			# Description
-	NewSheet.column_dimensions['G'].width = 50			
-	NewSheet.column_dimensions['H'].width = 5			# DASH
-	NewSheet.column_dimensions['I'].width = 30			# REF     (9)
-	NewSheet.column_dimensions['J'].width = 30			
-	NewSheet.column_dimensions['K'].width = 5			# DASH
-	NewSheet.column_dimensions['L'].width = 15			# QTY
-	NewSheet.column_dimensions['M'].width = 15
+	NewSheet.column_dimensions['C'].width = 5			# DASH (3)
+	NewSheet.column_dimensions['D'].width = 25			# QPN (4)
+	NewSheet.column_dimensions['E'].width = 25
+	NewSheet.column_dimensions['F'].width = 5			# DASH   (6)
+	NewSheet.column_dimensions['G'].width = 50			# Description (7)
+	NewSheet.column_dimensions['H'].width = 50			
+	NewSheet.column_dimensions['I'].width = 5			# DASH (9)
+	NewSheet.column_dimensions['J'].width = 30			# REF     (10)
+	NewSheet.column_dimensions['K'].width = 30			
+	NewSheet.column_dimensions['L'].width = 5			# DASH (12)
+	NewSheet.column_dimensions['M'].width = 15			# QTY (13)
+	NewSheet.column_dimensions['N'].width = 15
+	NewSheet.column_dimensions['N'].width = 15			# QTY Discrepancy 			
 	
 	
 	comparison_bom_header = [ 	str(type2_bom_description) + " MFGPN", str(type1_bom_description) + " MFGPN","-",
                           		str(type2_bom_description) + " QPN", str(type1_bom_description) + " QPN","-",
 								str(type2_bom_description) + " DES", str(type1_bom_description) + " DES","-",
 								str(type2_bom_description) + " REF", str(type1_bom_description) + " REF","-",
-								str(type2_bom_description) + " QTY", str(type1_bom_description) + " QTY"]
-	comparison_bom_col_offsets = {"T2_MFGPN":2,"T1_MFGPN":1,"T2_QPN":4,"T1_QPN":3,"T2_DES":8,"T1_DES":7,"T2_REF":10,"T1_REF":9,"T2_QTY":13,"T1_QTY":12}  #Excel row offsets are one-base!
+								str(type2_bom_description) + " QTY", str(type1_bom_description) + " QTY","-",
+								str("QTY DESCREPANCY")
+             				]
+	comparison_bom_col_offsets = {"T2_MFGPN":2,"T1_MFGPN":1,"T2_QPN":5,"T1_QPN":4,"T2_DES":8,"T1_DES":7,"T2_REF":11,"T1_REF":10,"T2_QTY":14,"T1_QTY":13,"QTY_DIFF":15}  #Excel row offsets are one-base!
 	# comparison_bom_col_offsets = {"T2_QPN":1,"T1_QPN":2,"T2_DES":4,"T1_DES":5,"T2_REF":7,"T1_REF":8,"T2_QTY":10,"T1_QTY":11}  #Excel row offsets are one-base!
 	current_row_counter = 1
 	# ----------------------------------------------------------------------- #
@@ -522,17 +525,19 @@ if __name__ == '__main__':
 			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_MFGPN"]).value = key
 			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_MFGPN"]).value = key
    
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QPN"]).value = key
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QPN"]).value = key
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QPN"]).value 	= dict_type2_bom[key][0]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QPN"]).value 	= dict_type2_bom[key][0]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_DES"]).value = dict_type2_bom[key][0]
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_DES"]).value = dict_type1_bom[key][0]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_DES"]).value 	= dict_type2_bom[key][1]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_DES"]).value 	= dict_type1_bom[key][1]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_REF"]).value = dict_type2_bom[key][1]
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_REF"]).value = dict_type1_bom[key][1]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_REF"]).value 	= dict_type2_bom[key][2]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_REF"]).value 	= dict_type1_bom[key][2]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QTY"]).value = dict_type2_bom[key][2]
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QTY"]).value = dict_type1_bom[key][2]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QTY"]).value 	= dict_type2_bom[key][3]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QTY"]).value 	= dict_type1_bom[key][3]
+   
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["QTY_DIFF"]).value 	= str(int(dict_type2_bom[key][3]) - int(dict_type1_bom[key][3]))
 			
 			current_row_counter = current_row_counter + 1 
 			
@@ -553,13 +558,15 @@ if __name__ == '__main__':
 		if (key not in dict_type2_bom):
 			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_MFGPN"]).value = key
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QPN"]).value = key
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_MFGPN"]).value = key
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_DES"]).value = dict_type1_bom[key][0]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_DES"]).value = dict_type1_bom[key][1]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_REF"]).value = dict_type1_bom[key][1]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_REF"]).value = dict_type1_bom[key][2]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QTY"]).value = dict_type1_bom[key][2]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QTY"]).value = dict_type1_bom[key][3]
+   
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["QTY_DIFF"]).value 	=  dict_type1_bom[key][3]
 	
 			current_row_counter = current_row_counter + 1 
 	
@@ -582,11 +589,13 @@ if __name__ == '__main__':
    
 			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QPN"]).value = key
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_DES"]).value = dict_type2_bom[key][0]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_DES"]).value = dict_type2_bom[key][1]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_REF"]).value = dict_type2_bom[key][1]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_REF"]).value = dict_type2_bom[key][2]
 			
-			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QTY"]).value = dict_type2_bom[key][2]
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QTY"]).value = dict_type2_bom[key][3]
+
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["QTY_DIFF"]).value 	= dict_type2_bom[key][3]
 	
 			current_row_counter = current_row_counter + 1 
 	
