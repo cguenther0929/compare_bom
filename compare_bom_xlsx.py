@@ -28,9 +28,10 @@ import logging
 
 # ----------------------------------------------------------------------- #
 # Regular Expression Strings
+# When attempted to match, case is ignored
 # ----------------------------------------------------------------------- #
 qpn_re 		= "(QPN)|(COMPONENT.?PART)"
-mfgpn_re 	= "(MFG.?PN)"										# To match MFGPN or MFG PN (will ignore case)
+mfgpn_re 	= "(MFG.?PN)"										
 mfg_re 		= "(MFG)|(MANUFACTURER)"			
 des_re 		= "(DES)|(DESCRIPTION)|(Part.?Description)"
 ref_re		= "(REF)|(REF.DES)|(REFERENCE)"				# IFS BOMs often put this information in the NOTES column
@@ -44,16 +45,16 @@ notes_re	= "(NOTES)"
 
 ## DEFINE VRIABLES ##
 #####################
-MFGPN_col 	= 0								# Column number containing the MFGPN
-QPN_col 	= 0								# Column number containing QPN
-MFG_col 	= 0								# Column location for manufacturer part number
-DES_col 	= 0 							# Column location for description part number
-QTY_col 	= 0 							# Column location for quantity field
-UOM_col 	= 0 							# Column location for UOM field
-CR1_col		= 0								# Column location for supplier name
-CR1PN_col	= 0								# Column location for supplier's PN
-NOTE_col 	= 0 							# Column location for "notes" field
-BOM_HEADER 	= ["QPN","QTY","DES","REF"]		# The IFS BOM dictates this
+MFGPN_col 	= 0										# Column number containing the MFGPN
+QPN_col 	= 0										# Column number containing QPN
+MFG_col 	= 0										# Column location for manufacturer part number
+DES_col 	= 0 									# Column location for description part number
+QTY_col 	= 0 									# Column location for quantity field
+UOM_col 	= 0 									# Column location for UOM field
+CR1_col		= 0										# Column location for supplier name
+CR1PN_col	= 0										# Column location for supplier's PN
+NOTE_col 	= 0 									# Column location for "notes" field
+BOM_HEADER 	= ["QPN","QTY","DES","REF","MFGPN"]		# Headers that we want in the BOM
 
 # -------------------------------------- #
 # Dictionaries
@@ -243,6 +244,7 @@ if __name__ == '__main__':
 					print ("Search header before starting: ", search_header)
 					
 					flag_header_detecetd = False
+     
 					# ----------------------------------------------------------------------- #
 					# Iterate over columns of selected row
 					# ----------------------------------------------------------------------- #
@@ -278,6 +280,12 @@ if __name__ == '__main__':
 							search_header.remove("QTY")
 							logging.info("Found header: " + temptext)
 							logging.info("Still Looking For: " + str(search_header))
+						
+						elif(re.fullmatch(mfgpn_re,temptext,re.IGNORECASE)):		#Look for MFGPN field.  					
+							MFGPN_col = c
+							search_header.remove("MFGPN")
+							logging.info("Found header: " + temptext)
+							logging.info("Still Looking For: " + str(search_header))
 
 						# Point where we found every header field except the reference
 						if((len(search_header) == 1) and ("REF" in search_header) and (c == (num_cols))):
@@ -307,13 +315,14 @@ if __name__ == '__main__':
 						break
 					
 				if(sheet_valid):
-					print ("QPN column found to be: ", 			str(QPN_col))		
-					print ("QTY column found to be: ", 			str(QTY_col))
-					print ("Description column found to be: ", 	str(DES_col))		
-					print ("Reference column found to be: ", 	str(REF_col))		
+					print (f"QPN column found to be: {QPN_col}")		
+					print (f"MFGPN column found to be: {MFG_col}")		
+					print (f"QTY column found to be: {QTY_col}")
+					print (f"Description column found to be: {DES_col}")		
+					print (f"Reference column found to be: {REF_col}")		
 					
-					header = [QPN_col,DES_col,REF_col,QTY_col]
-					header_values = ["QPN","DES","REF","QTY","NOTES"]
+					header = [MFGPN_col,QPN_col,DES_col,REF_col,QTY_col]
+					header_values = ["MFGPN","QPN","DES","REF","QTY","NOTES"]
 					
 					# Now iterate through all rows of the current sheet and populate the data lists
 					blank_row_count = 0		# Reset number of blank rows detected.  When three in a row are detected, break out of the loop. 
@@ -359,6 +368,11 @@ if __name__ == '__main__':
 								current_value = ""
 							qty.append(current_value)
 							
+							current_value = clean_value(str(str(current_sheet.cell(row = r, column=MFGPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
+							if current_value == "None":
+								current_value = ""
+							mfgpn.append(current_value)
+							
 						if(blank_row_count >= 3):
 							break								# Too many blank rows detected, so break out of the loop.  
 	
@@ -371,22 +385,23 @@ if __name__ == '__main__':
 			# Construct dictionary 
 			if(bom_is_types2):
 				for i in range (0,len(qpn)):				
-					dict_type2_bom[qpn[i]] = (des[i],ref[i],qty[i])
+					# dict_type2_bom[qpn[i]] = (des[i],ref[i],qty[i])
+					dict_type2_bom[mfgpn[i]] = (qpn[i],des[i],ref[i],qty[i])
 			else:
 				for i in range (0,len(qpn)):				
-					dict_type1_bom[qpn[i]] = (des[i],ref[i],qty[i])
+					# dict_type1_bom[qpn[i]] = (des[i],ref[i],qty[i])
+					dict_type1_bom[mfgpn[i]] = (qpn[i],des[i],ref[i],qty[i])
 
 		# ----------------------------------------------------------------------- #
 		# Lists shall be cleared before moving onto the 
 		# next file, as a different dictionary will need to populated
 		# ----------------------------------------------------------------------- #
+		mfgpn.clear()
 		qpn.clear()
 		des.clear()
 		ref.clear()
 		qty.clear()
 		
-
-					
 	# ----------------------------------------------------------------------- #
 	# Main Loop
 	# Dictionaries have been built, and it is now time to compare
@@ -395,7 +410,7 @@ if __name__ == '__main__':
 
 	
 	# ----------------------------------------------------------------------- #
-	# Iterate through every QPN in the Type 1 BOM and 
+	# Iterate through every MFGPN in the Type 1 BOM and 
 	# and compare against Type 2
 	# ----------------------------------------------------------------------- #
 	print("\n\n================================================")
@@ -407,11 +422,12 @@ if __name__ == '__main__':
 	
 	for key in dict_type1_bom:
 		if(key in dict_type2_bom):
-			print("QPN: ", key, " -- in ",type1_bom_description," and ",type2_bom_description, " BOM.")
+			print("MFGPN", key, " -- in ",type1_bom_description," and ",type2_bom_description, " BOM.")
 			
-			print("\tType 1/Type 2 DES:\t", dict_type1_bom[key][0]," | ",dict_type2_bom[key][0])
-			print("\tType 1/Type 2 QTY:\t", dict_type1_bom[key][2]," | ",dict_type2_bom[key][2])
-			print("\tType 1/Type 2 REF:\t", dict_type1_bom[key][1]," | ",dict_type2_bom[key][1])
+			print("\tType 1/Type 2 QPN:\t", dict_type1_bom[key][0]," | ",dict_type2_bom[key][0])
+			print("\tType 1/Type 2 DES:\t", dict_type1_bom[key][1]," | ",dict_type2_bom[key][1])
+			print("\tType 1/Type 2 REF:\t", dict_type1_bom[key][2]," | ",dict_type2_bom[key][2])
+			print("\tType 1/Type 2 QTY:\t", dict_type1_bom[key][3]," | ",dict_type2_bom[key][3])
 		
 	print("\n================================================")
 	print("================================================")
@@ -422,7 +438,7 @@ if __name__ == '__main__':
 		
 	for key in dict_type1_bom:
 		if (key not in dict_type2_bom):
-			print("QPN ", key, " -- in ",type1_bom_description," but not in ",type2_bom_description, " BOM.")
+			print("MFGPN ", key, " -- in ",type1_bom_description," but not in ",type2_bom_description, " BOM.")
 
 
 	print("\n================================================")
@@ -434,7 +450,7 @@ if __name__ == '__main__':
 
 	for key in dict_type2_bom:
 		if(key not in dict_type1_bom):
-			print("QPN: ", key, " -- is in ", type2_bom_description, ", but NOT in ", type1_bom_description)
+			print("MFGPN: ", key, " -- is in ", type2_bom_description, ", but NOT in ", type1_bom_description)
 			
 	print("\n")
 	
@@ -456,25 +472,31 @@ if __name__ == '__main__':
 
 	# ----------------------------------------------------------------------- #
 	# Format column widths
+	# Excel row offsets are one-base! 
 	# ----------------------------------------------------------------------- #
-	NewSheet.column_dimensions['A'].width = 25			# QPN
-	NewSheet.column_dimensions['B'].width = 25
-	NewSheet.column_dimensions['C'].width = 5			# Dash
-	NewSheet.column_dimensions['D'].width = 50			# Description
-	NewSheet.column_dimensions['E'].width = 50			
-	NewSheet.column_dimensions['F'].width = 5			# Dash
-	NewSheet.column_dimensions['G'].width = 30			# REF
-	NewSheet.column_dimensions['H'].width = 30			
-	NewSheet.column_dimensions['I'].width = 5			# Dash
-	NewSheet.column_dimensions['J'].width = 15			# QTY
-	NewSheet.column_dimensions['K'].width = 15
+	NewSheet.column_dimensions['A'].width = 25			# MFGPN (1)
+	NewSheet.column_dimensions['B'].width = 25			
+	NewSheet.column_dimensions['C'].width = 5			# DASH
+	NewSheet.column_dimensions['C'].width = 25			# QPN
+	NewSheet.column_dimensions['D'].width = 25
+	NewSheet.column_dimensions['E'].width = 5			# DASH   (5)
+	NewSheet.column_dimensions['F'].width = 50			# Description
+	NewSheet.column_dimensions['G'].width = 50			
+	NewSheet.column_dimensions['H'].width = 5			# DASH
+	NewSheet.column_dimensions['I'].width = 30			# REF     (9)
+	NewSheet.column_dimensions['J'].width = 30			
+	NewSheet.column_dimensions['K'].width = 5			# DASH
+	NewSheet.column_dimensions['L'].width = 15			# QTY
+	NewSheet.column_dimensions['M'].width = 15
 	
 	
-	comparison_bom_header = [ 	str(type2_bom_description) + " QPN", str(type1_bom_description) + " QPN","-",
+	comparison_bom_header = [ 	str(type2_bom_description) + " MFGPN", str(type1_bom_description) + " MFGPN","-",
+                          		str(type2_bom_description) + " QPN", str(type1_bom_description) + " QPN","-",
 								str(type2_bom_description) + " DES", str(type1_bom_description) + " DES","-",
 								str(type2_bom_description) + " REF", str(type1_bom_description) + " REF","-",
 								str(type2_bom_description) + " QTY", str(type1_bom_description) + " QTY"]
-	comparison_bom_col_offsets = {"T2_QPN":1,"T1_QPN":2,"T2_DES":4,"T1_DES":5,"T2_REF":7,"T1_REF":8,"T2_QTY":10,"T1_QTY":11}
+	comparison_bom_col_offsets = {"T2_MFGPN":2,"T1_MFGPN":1,"T2_QPN":4,"T1_QPN":3,"T2_DES":8,"T1_DES":7,"T2_REF":10,"T1_REF":9,"T2_QTY":13,"T1_QTY":12}  #Excel row offsets are one-base!
+	# comparison_bom_col_offsets = {"T2_QPN":1,"T1_QPN":2,"T2_DES":4,"T1_DES":5,"T2_REF":7,"T1_REF":8,"T2_QTY":10,"T1_QTY":11}  #Excel row offsets are one-base!
 	current_row_counter = 1
 	# ----------------------------------------------------------------------- #
 	# Write the header values -- first column
@@ -485,18 +507,21 @@ if __name__ == '__main__':
 	current_row_counter = current_row_counter + 1 
 	
 	# ----------------------------------------------------------------------- #
-	# Iterate through every QPN in the ENG BOM
+	# Iterate through every MFG in the TYPE 1 BOM
 	# and compare against IFS
 	# ----------------------------------------------------------------------- #
 	logging.info("================================================")
 	logging.info("Writing to BOM the components that match")
 	
-	NewSheet.cell(row=current_row_counter,column=1).value = ("These QPNs match between " + type2_bom_description + " and " + type1_bom_description)
+	NewSheet.cell(row=current_row_counter,column=1).value = ("These MFGs match between " + type2_bom_description + " and " + type1_bom_description)
 	current_row_counter = current_row_counter + 1 
 	
 	for key in dict_type1_bom:
 		if(key in dict_type2_bom):
 			
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_MFGPN"]).value = key
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_MFGPN"]).value = key
+   
 			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QPN"]).value = key
 			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QPN"]).value = key
 			
@@ -515,17 +540,19 @@ if __name__ == '__main__':
 			
 			
 	# ----------------------------------------------------------------------- #
-	# Iterate through every QPN in the ENG BOM
-	# and compare against IFS
+	# Iterate through every MFGPN in the TYPE 1 BOM
+	# and compare against TYPE 2 BOM
 	# ----------------------------------------------------------------------- #
 	logging.info("================================================")
 	logging.info("Writing to BOM the components in " + str(type1_bom_description) + " BOM but not in " + str(type2_bom_description))
 	
-	NewSheet.cell(row=current_row_counter,column=1).value = ("These QPNs are in " + type1_bom_description + " but NOT in " + type2_bom_description)
+	NewSheet.cell(row=current_row_counter,column=1).value = ("These MFGPNs are in " + type1_bom_description + " but NOT in " + type2_bom_description)
 	current_row_counter = current_row_counter + 1 
 	
 	for key in dict_type1_bom:
 		if (key not in dict_type2_bom):
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_MFGPN"]).value = key
+			
 			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_QPN"]).value = key
 			
 			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T1_DES"]).value = dict_type1_bom[key][0]
@@ -540,17 +567,19 @@ if __name__ == '__main__':
 
 
 	# ----------------------------------------------------------------------- #
-	# Iterate through every QPN in the IFS BOM
-	# and compare against ENG
+	# Iterate through every MFGPN in the TYPE 2 BOM
+	# and compare against the TYPE 1 BOM
 	# ----------------------------------------------------------------------- #
 	logging.info("================================================")
 	logging.info("Writing to BOM the components in " + str(type2_bom_description) + " BOM but not in " + str(type1_bom_description))
 	
-	NewSheet.cell(row=current_row_counter,column=1).value = ("These QPNs are in " + type2_bom_description + " but NOT in " + type1_bom_description)
+	NewSheet.cell(row=current_row_counter,column=1).value = ("These MFGPNs are in " + type2_bom_description + " but NOT in " + type1_bom_description)
 	current_row_counter = current_row_counter + 1 
 	
 	for key in dict_type2_bom:
 		if(key not in dict_type1_bom):
+			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_MFGPN"]).value = key
+   
 			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_QPN"]).value = key
 			
 			NewSheet.cell(row=current_row_counter,column=comparison_bom_col_offsets["T2_DES"]).value = dict_type2_bom[key][0]

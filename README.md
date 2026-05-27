@@ -20,3 +20,5 @@ v1.1 --  When searching for the "reference" fields, the "notes" field is no long
 v1.2 -- Made logging more verbose so it is easier to identify BOM formatting issues.  It is no longer required that there be a REF field in the BOM -- which is good for BOMs that include cable drawings, which do not require a reference field.  
 
 V1.3 -- BOM descriptions are no longer fixed at ENG or IFS, but rather, the user can enter a short description based on the filename.  For example, he/she may wish to enter A02 and A03.  
+
+V1.4 -- This script was updated so that MFGPNs are compared opposed to QPNs.
