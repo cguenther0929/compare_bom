@@ -24,3 +24,5 @@ V1.3 -- BOM descriptions are no longer fixed at ENG or IFS, but rather, the user
 V1.4 -- This script was updated so that MFGPNs are compared opposed to QPNs.
 
 V1.5 -- Addressed bug in which offsets were incorrect when printing the comparison report.  Also, a quantity difference column has been added.  
+
+v1.6 -- Much cleanup has occurred.  There is only one "clean_value" helper function now.  The bug in which the Notes field in the engineering BOM causes a crash as "Notes" in the IFS BOM will be mapped to REF, has been fixed.  Thus both NOTES and REF reside in the same regular expression.    
